@@ -1,0 +1,31 @@
+fastapi>=0.95.0
+uvicorn>=0.21.1
+sqlalchemy>=2.0.9
+psycopg2-binary>=2.9.6
+redis>=4.5.4
+requests>=2.28.2
+prometheus-client>=0.16.0
+pydantic>=1.10.7
+email-validator>=2.0.0
+python-dotenv>=1.0.0
+pytest>=7.3.1
+httpx>=0.24.0
+slowapi==0.1.7
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.5
+bcrypt==3.2.0
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-exporter-otlp>=1.20.0
+opentelemetry-instrumentation-fastapi>=0.41b0
+opentelemetry-instrumentation-requests>=0.41b0
+opentelemetry-instrumentation-sqlalchemy>=0.41b0
+opentelemetry-instrumentation-redis>=0.41b0
+# Add these lines to services/api/requirements.txt
+
+# B3 propagator for trace context propagation
+opentelemetry-propagator-b3>=0.41b0
+
+# Additional propagators (optional but recommended)
+opentelemetry-propagator-jaeger>=0.41b0

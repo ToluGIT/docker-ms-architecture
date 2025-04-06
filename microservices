@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+
+# Debug: Print the arguments
+echo "Command arguments: $@"
+
+
+# Run the Python CLI tool with all arguments passed to this script
+python3 "$SCRIPT_DIR/scripts/cli.py" "$@"

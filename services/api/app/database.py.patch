@@ -1,0 +1,12 @@
+# Add these imports
+try:
+    from .db_tracing import instrument_database, enable_statement_tracing
+    tracing_available = True
+except ImportError:
+    tracing_available = False
+
+# Add after creating the engine (after the 'engine = create_engine' line)
+# Initialize database tracing if available
+if tracing_available:
+    instrument_database(engine)
+    enable_statement_tracing(engine)

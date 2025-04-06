@@ -1,0 +1,40 @@
+# Add this import near the top
+try:
+    from ..repositories.item_repository import ItemRepository
+    repository_available = True
+except ImportError:
+    repository_available = False
+
+# Modify the get_items function
+def get_items(db: Session, skip: int = 0, limit: int = 100):
+    if repository_available:
+        return ItemRepository.get_items(db, skip, limit)
+    else:
+        return db.query(models.Item).offset(skip).limit(limit).all()
+
+# Modify the get_item_by_id function
+def get_item_by_id(db: Session, item_id: int):
+    if repository_available:
+        return ItemRepository.get_item_by_id(db, item_id)
+    else:
+        return db.query(models.Item).filter(models.Item.id == item_id).first()
+
+# Modify the create_user_item function
+def create_user_item(db: Session, item: ItemCreate, user_id: int):
+    if repository_available:
+        # Extract item data and explicitly set owner_id to avoid duplication
+        item_data = item.dict()
+        if 'owner_id' in item_data:
+            del item_data['owner_id']
+        item_data["owner_id"] = user_id
+        return ItemRepository.create_item(db, item_data)
+    else:
+        # Original implementation
+        item_data = item.dict()
+        if 'owner_id' in item_data:
+            del item_data['owner_id']
+        db_item = models.Item(**item_data, owner_id=user_id)
+        db.add(db_item)
+        db.commit()
+        db.refresh(db_item)
+        return db_item

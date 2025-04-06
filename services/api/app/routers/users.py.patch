@@ -1,0 +1,49 @@
+# Add this import near the top
+try:
+    from ..repositories.user_repository import UserRepository
+    repository_available = True
+except ImportError:
+    repository_available = False
+
+# Modify the get_user_by_email function
+def get_user_by_email(db: Session, email: str):
+    if repository_available:
+        return UserRepository.get_user_by_email(db, email)
+    else:
+        return db.query(models.User).filter(models.User.email == email).first()
+
+# Modify the get_user_by_username function
+def get_user_by_username(db: Session, username: str):
+    if repository_available:
+        return UserRepository.get_user_by_username(db, username)
+    else:
+        return db.query(models.User).filter(models.User.username == username).first()
+
+# Modify the get_user_by_id function
+def get_user_by_id(db: Session, user_id: int):
+    if repository_available:
+        return UserRepository.get_user_by_id(db, user_id)
+    else:
+        return db.query(models.User).filter(models.User.id == user_id).first()
+
+# Modify the create_user function
+def create_user(db: Session, user: UserCreate):
+    if repository_available:
+        # In a real application, hash the password
+        hashed_password = models.User.get_password_hash(user.password)
+        user_data = user.dict()
+        user_data["hashed_password"] = hashed_password
+        del user_data["password"]
+        return UserRepository.create_user(db, user_data)
+    else:
+        # Original implementation
+        hashed_password = models.User.get_password_hash(user.password)
+        db_user = models.User(
+            email=user.email,
+            username=user.username,
+            hashed_password=hashed_password
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user

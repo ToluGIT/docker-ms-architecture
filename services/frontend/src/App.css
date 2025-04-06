@@ -1,0 +1,258 @@
+
+=.App {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-md);
+  font-family: var(--font-body);
+  color: var(--ui-dark);
+  background-color: var(--ui-light);
+}
+
+.App-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  padding: var(--space-xl);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.App-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.05),
+    rgba(255,255,255,0.05) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.App-header h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  letter-spacing: -0.5px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.status-panel, .data-panel, .external-data-panel {
+  background-color: white;
+  padding: var(--space-lg);
+  border-radius: 8px;
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.status-panel:hover, .data-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.status-card, .data-card, .list-item {
+  background-color: white;
+  padding: var(--space-md);
+  border-radius: 8px;
+  margin-bottom: var(--space-md);
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: all var(--transition-fast);
+}
+
+.status-card:hover {
+  border-color: var(--primary-light);
+}
+
+.status-card h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.status-card p {
+  margin: var(--space-xs) 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Add status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: var(--space-sm);
+}
+
+.status-healthy {
+  background-color: var(--success);
+}
+
+.status-unhealthy {
+  background-color: var(--error);
+}
+
+/* Login form styling */
+.login-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-form input {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color var(--transition-fast);
+}
+
+.login-form input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.2);
+}
+
+.login-form button {
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color var(--transition-fast);
+}
+
+.login-form button:hover {
+  background-color: var(--primary-dark);
+}
+
+.error-message {
+  color: var(--error);
+  background-color: rgba(231, 76, 60, 0.1);
+  padding: var(--space-md);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.logout-button {
+  position: absolute;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  padding: 8px 16px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  z-index: 2;
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Add these styles to your App.css file */
+
+/* Create better spacing between form and list */
+.create-form {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Improve the column layout */
+.data-panel {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.column {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Add styling for list container to give it some space */
+.list-container {
+  margin-top: 1.5rem;
+}
+
+/* Style the list items better */
+.list-item {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.list-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Add some styling to the form inputs */
+.create-form input {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.create-form button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.create-form button:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Improve status display */
+.status-details p {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.text-success {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.text-error {
+  color: var(--error);
+  font-weight: 500;
+}

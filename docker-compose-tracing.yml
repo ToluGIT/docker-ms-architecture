@@ -1,0 +1,42 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # UI
+      - "4317:4317"    # OTLP gRPC (OpenTelemetry)
+      - "4318:4318"    # OTLP HTTP
+      - "14268:14268"  # Jaeger HTTP thrift
+      - "6831:6831/udp" # Jaeger thrift compact
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - SPAN_STORAGE_TYPE=memory  # Using in-memory storage for development
+      # Add log level for better debugging
+      - LOG_LEVEL=info
+    volumes:
+      # Optional persistent storage for traces
+      - jaeger_data:/badger
+    networks:
+      - app-network
+      - monitoring-network
+      - tracing-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  app-network:
+    external: true
+    name: microservices_app_network
+  monitoring-network:
+    external: true
+    name: microservices_monitoring_network
+  tracing-network:
+    external: true
+    name: microservices_tracing_network
+
+volumes:
+  jaeger_data:  # Add volume for persistence

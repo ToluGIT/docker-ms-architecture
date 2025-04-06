@@ -1,0 +1,27 @@
+# Use Node with Debian instead of Alpine for better build performance
+FROM node:18-slim
+
+WORKDIR /app
+
+# Set npm config for faster installs
+RUN npm config set registry https://registry.npmjs.org/ \
+    && npm config set fetch-retries 3 \
+    && npm config set fetch-retry-mintimeout 5000 \
+    && npm config set fetch-retry-maxtimeout 60000
+
+# Copy only package.json
+COPY package.json ./
+
+# Install dependencies with specific flags for better performance
+RUN npm install --no-audit --prefer-offline --no-fund
+
+# Copy source files
+COPY public/ public/
+COPY src/ src/
+
+# Expose port and set environment
+EXPOSE 3000
+ENV CHOKIDAR_USEPOLLING=true
+
+# Start the dev server
+CMD ["npm", "start"]

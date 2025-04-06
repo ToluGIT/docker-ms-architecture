@@ -1,0 +1,14 @@
+# monitoring/grafana/provisioning/dashboards/slo.yaml
+apiVersion: 1
+
+providers:
+  - name: 'SLO Dashboards'
+    orgId: 1
+    folder: 'Service Level Monitoring'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

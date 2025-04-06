@@ -1,0 +1,208 @@
+"""
+Trace metrics module for Prometheus integration with OpenTelemetry
+"""
+import time
+import logging
+from prometheus_client import Histogram, Counter, Gauge
+from opentelemetry import trace
+from typing import Dict, Any, Optional
+
+# Configure logger
+logger = logging.getLogger(__name__)
+
+# Define Prometheus metrics
+REQUEST_LATENCY = Histogram(
+    'request_duration_seconds', 
+    'Request latency in seconds',
+    ['method', 'endpoint', 'trace_sampled']
+)
+
+SPAN_DURATION = Histogram(
+    'span_duration_seconds',
+    'Span duration in seconds',
+    ['service', 'operation', 'status']
+)
+
+ERROR_COUNTER = Counter(
+    'trace_errors_total',
+    'Total number of errors in traces',
+    ['service', 'operation', 'error_type']
+)
+
+OPERATION_COUNTER = Counter(
+    'trace_operations_total',
+    'Total number of operations executed',
+    ['service', 'operation']
+)
+
+DB_OPERATION_LATENCY = Histogram(
+    'db_operation_duration_seconds',
+    'Database operation latency in seconds',
+    ['operation_type', 'table', 'trace_id']
+)
+
+CACHE_OPERATION_LATENCY = Histogram(
+    'cache_operation_duration_seconds',
+    'Cache operation latency in seconds',
+    ['operation', 'hit', 'trace_id']
+)
+
+# SLO metrics
+SLO_LATENCY_BUCKET = Histogram(
+    'slo_request_latency_seconds',
+    'Request latency for SLO tracking',
+    ['endpoint', 'slo']
+)
+
+SLO_ERROR_COUNTER = Counter(
+    'slo_errors_total',
+    'Total number of errors for SLO tracking',
+    ['endpoint', 'slo'] 
+)
+
+SLO_COMPLIANCE = Gauge(
+    'slo_compliance_ratio',
+    'Compliance with SLO targets',
+    ['endpoint', 'slo', 'window']
+)
+
+# Track time taken for an operation and record in Prometheus
+def track_operation_time(operation_name: str, service: str = "api"):
+    """Decorator to track operation time in Prometheus metrics"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            
+            # Get current span context for correlation
+            current_span = trace.get_current_span()
+            span_context = current_span.get_span_context() if current_span else None
+            trace_id = format(span_context.trace_id, '032x') if span_context else "unknown"
+            
+            # Track this operation
+            OPERATION_COUNTER.labels(
+                service=service,
+                operation=operation_name
+            ).inc()
+            
+            try:
+                # Execute the original function
+                result = func(*args, **kwargs)
+                
+                # Record successful execution time
+                duration = time.time() - start_time
+                SPAN_DURATION.labels(
+                    service=service,
+                    operation=operation_name,
+                    status="success"
+                ).observe(duration)
+                
+                return result
+            except Exception as e:
+                # Record error
+                ERROR_COUNTER.labels(
+                    service=service,
+                    operation=operation_name,
+                    error_type=e.__class__.__name__
+                ).inc()
+                
+                # Record error execution time 
+                duration = time.time() - start_time
+                SPAN_DURATION.labels(
+                    service=service,
+                    operation=operation_name,
+                    status="error"
+                ).observe(duration)
+                
+                # Re-raise the exception
+                raise
+        return wrapper
+    return decorator
+
+# Track database operations with trace ID for exemplars
+def track_db_operation(operation_type: str, table: str):
+    """Record database operation metrics with trace correlation"""
+    current_span = trace.get_current_span()
+    span_context = current_span.get_span_context() if current_span else None
+    trace_id = format(span_context.trace_id, '032x') if span_context else "unknown"
+    
+    start_time = time.time()
+    
+    # Return context manager for timing
+    class TimerContextManager:
+        def __enter__(self):
+            return self
+            
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            duration = time.time() - start_time
+            DB_OPERATION_LATENCY.labels(
+                operation_type=operation_type,
+                table=table,
+                trace_id=trace_id
+            ).observe(duration)
+            
+            if exc_type:
+                # Record error
+                ERROR_COUNTER.labels(
+                    service="db",
+                    operation=f"{operation_type}_{table}",
+                    error_type=exc_type.__name__
+                ).inc()
+    
+    return TimerContextManager()
+
+# Track cache operations with hit/miss info
+def track_cache_operation(operation: str, hit: bool):
+    """Record cache operation metrics with trace correlation"""
+    current_span = trace.get_current_span()
+    span_context = current_span.get_span_context() if current_span else None
+    trace_id = format(span_context.trace_id, '032x') if span_context else "unknown"
+    
+    start_time = time.time()
+    
+    # Return context manager for timing
+    class TimerContextManager:
+        def __enter__(self):
+            return self
+            
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            duration = time.time() - start_time
+            CACHE_OPERATION_LATENCY.labels(
+                operation=operation,
+                hit="true" if hit else "false",
+                trace_id=trace_id
+            ).observe(duration)
+            
+            if exc_type:
+                # Record error
+                ERROR_COUNTER.labels(
+                    service="cache",
+                    operation=operation,
+                    error_type=exc_type.__name__
+                ).inc()
+    
+    return TimerContextManager()
+
+# Track API request for SLO monitoring
+def track_request_for_slo(endpoint: str, slo_name: str, latency: float, is_error: bool = False):
+    """Record request metrics for SLO tracking"""
+    # Record latency for SLO tracking
+    SLO_LATENCY_BUCKET.labels(
+        endpoint=endpoint,
+        slo=slo_name
+    ).observe(latency)
+    
+    # Count errors if any
+    if is_error:
+        SLO_ERROR_COUNTER.labels(
+            endpoint=endpoint,
+            slo=slo_name
+        ).inc()
+
+# Update SLO compliance ratio based on recent data
+def update_slo_compliance(endpoint: str, slo_name: str, compliance_ratio: float, window: str = "5m"):
+    """Update the SLO compliance gauge"""
+    SLO_COMPLIANCE.labels(
+        endpoint=endpoint,
+        slo=slo_name,
+        window=window
+    ).set(compliance_ratio)

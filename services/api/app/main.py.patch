@@ -1,0 +1,110 @@
+# Add these imports after existing Redis import
+try:
+    from .cache_tracing import instrument_redis
+    from .repositories.cached_user_repository import CachedUserRepository
+    traced_redis_available = True
+except ImportError:
+    traced_redis_available = False
+
+# Replace Redis client initialization with traced version
+# Find and modify the Redis initialization section:
+# Setup Redis connection with retry
+def get_redis_client():
+    """Get a Redis client with tracing if available"""
+    redis_url = CredentialManager.get_redis_url()
+    max_retries = 5
+    retry_delay = 1  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # Create the standard Redis client first
+            base_client = redis.Redis.from_url(
+                redis_url,
+                socket_connect_timeout=5,
+                socket_keepalive=True,
+                retry_on_timeout=True,
+                max_connections=100
+            )
+            
+            # Test the connection
+            base_client.ping()
+            
+            # Wrap with tracing if available
+            if traced_redis_available:
+                logger.info("Instrumenting Redis client with tracing")
+                return instrument_redis(base_client)
+            else:
+                return base_client
+                
+        except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+            if attempt < max_retries - 1:
+                print(f"Redis connection attempt {attempt+1} failed. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                print(f"Failed to connect to Redis after {max_retries} attempts: {e}")
+                # Return a dummy client that will log errors but not crash the app
+                return DummyRedisClient()
+
+# Modify the external data function to use traced spans
+@app.get("/external-data")
+@limiter.limit("10/minute")
+def get_external_data(request: Request):
+    """Fetch external data with Redis caching"""
+    cache_key = "external_data"
+    
+    # Get tracer if available
+    current_tracer = tracing.get_tracer() if 'tracing' in globals() else None
+    
+    # Create a context manager for the span based on availability
+    cache_lookup_ctx = current_tracer.start_as_current_span("redis_cache_lookup") if current_tracer else nullcontext()
+    
+    # Try cache first
+    with cache_lookup_ctx:
+        cached_data = redis_client.get(cache_key)
+        if cached_data:
+            return {"source": "cache", "data": cached_data.decode('utf-8')}
+    
+    # Fetch from API if not in cache
+    try:
+        api_request_ctx = current_tracer.start_as_current_span("github_api_request") if current_tracer else nullcontext()
+        with api_request_ctx:
+            response = requests.get("https://api.github.com/repos/docker/docker")
+            data = response.json()
+        
+        cache_store_ctx = current_tracer.start_as_current_span("redis_cache_store") if current_tracer else nullcontext()
+        with cache_store_ctx:
+            redis_client.setex(cache_key, 300, str(data))
+            
+        return {"source": "api", "data": data}
+    except requests.RequestException as e:
+        if current_tracer:
+            current_span = trace.get_current_span()
+            current_span.set_status(trace.Status(trace.StatusCode.ERROR))
+            current_span.record_exception(e)
+            
+        raise HTTPException(status_code=500, detail=f"External API error: {str(e)}")
+
+
+# Add a new health endpoint that includes Redis stats
+@app.get("/redis-stats")
+def redis_stats():
+    """Get Redis cache statistics"""
+    try:
+        if traced_redis_available:
+            from .cache_tracing.redis_tracing import get_cache_stats
+            stats = get_cache_stats()
+            return {
+                "status": "enabled",
+                "stats": stats
+            }
+        else:
+            return {
+                "status": "tracing_not_available",
+                "stats": {}
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }

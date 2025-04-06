@@ -1,0 +1,97 @@
+groups:
+  - name: SLO_rules
+    rules:
+    # API Health SLO - Response time under 100ms for 95% of requests
+    - record: slo:api_health:request_latency_slo_ratio
+      expr: |
+        sum(rate(slo_request_latency_seconds_bucket{slo="api_health", le="0.1"}[5m])) /
+        sum(rate(slo_request_latency_seconds_count{slo="api_health"}[5m]))
+      labels:
+        slo: api_health
+        window: 5m
+    
+    # External Data SLO - Response time under 300ms for 90% of requests
+    - record: slo:external_data:request_latency_slo_ratio
+      expr: |
+        sum(rate(slo_request_latency_seconds_bucket{slo="external_data", le="0.3"}[5m])) /
+        sum(rate(slo_request_latency_seconds_count{slo="external_data"}[5m]))
+      labels:
+        slo: external_data
+        window: 5m
+    
+    # Data Access SLO - Response time under 200ms for 95% of requests
+    - record: slo:data_access:request_latency_slo_ratio
+      expr: |
+        sum(rate(slo_request_latency_seconds_bucket{slo="data_access", le="0.2"}[5m])) /
+        sum(rate(slo_request_latency_seconds_count{slo="data_access"}[5m]))
+      labels:
+        slo: data_access
+        window: 5m
+
+    # Error Budget SLO - Less than a 1% error rate for all endpoints
+    - record: slo:api:error_ratio
+      expr: |
+        sum(rate(slo_errors_total[5m])) / 
+        sum(rate(request_duration_seconds_count[5m]))
+      labels:
+        slo: error_budget
+        window: 5m
+        
+    # Update the compliance gauge metrics for use in dashboards
+    - record: slo_compliance_ratio
+      expr: slo:api_health:request_latency_slo_ratio
+      labels:
+        endpoint: health_check
+        slo: api_health
+        window: 5m
+        
+    - record: slo_compliance_ratio
+      expr: slo:external_data:request_latency_slo_ratio
+      labels:
+        endpoint: get_external_data
+        slo: external_data
+        window: 5m
+        
+    - record: slo_compliance_ratio
+      expr: slo:data_access:request_latency_slo_ratio
+      labels:
+        endpoint: data_access
+        slo: data_access
+        window: 5m
+        
+    # Alerting rules
+    - alert: ApiHealthSloBreached
+      expr: slo:api_health:request_latency_slo_ratio < 0.95
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "API Health SLO Breach"
+        description: "API Health endpoint is not meeting its SLO of 95% of requests under 100ms. Current value: {{ $value }}"
+        
+    - alert: ExternalDataSloBreached
+      expr: slo:external_data:request_latency_slo_ratio < 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "External Data SLO Breach"
+        description: "External Data endpoint is not meeting its SLO of 90% of requests under 300ms. Current value: {{ $value }}"
+        
+    - alert: DataAccessSloBreached
+      expr: slo:data_access:request_latency_slo_ratio < 0.95
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Data Access SLO Breach"
+        description: "Data Access endpoints are not meeting their SLO of 95% of requests under 200ms. Current value: {{ $value }}"
+        
+    - alert: ErrorBudgetBreach
+      expr: slo:api:error_ratio > 0.01
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Error Budget Breach"
+        description: "Error rate is exceeding the 1% threshold. Current error rate: {{ $value }}"

@@ -1,0 +1,104 @@
+services:
+  api:
+    build: 
+      context: ./services/api
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    environment:
+    - JWT_SECRET_KEY=${JWT_SECRET_KEY:-devkey123456789012345678901234}
+    - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+    - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+    - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-securedbpassword}@db:5432/${DB_NAME:-app}
+    - REDIS_URL=redis://:${REDIS_PASSWORD:-secureredispassword}@redis:6379/0
+    - REDIS_HOST=redis
+    - REDIS_PASSWORD=${REDIS_PASSWORD:-secureredispassword}
+    - CORS_ORIGINS=http://localhost:3000
+    - ENABLE_TRACING=true
+    - OTLP_ENDPOINT=jaeger:4317
+    - OTEL_SERVICE_NAME=api-service
+    - OTEL_TRACES_SAMPLER=always_on
+    - OTEL_TRACES_EXPORTER=otlp
+    - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+    - OTEL_PROPAGATORS=tracecontext,baggage,b3
+    - OTEL_LOG_LEVEL=info
+    - CORRELATION_ID_HEADER=X-Correlation-ID
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/api/app:/app/app
+    networks:
+      - app-network
+      - monitoring-network  
+      - tracing-network    
+  
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_OTEL_PROPAGATOR=tracecontext,b3
+      - REACT_APP_CORRELATION_HEADER=X-Correlation-ID
+      - REACT_APP_SERVICE_NAME=frontend-service  
+      - REACT_APP_OTEL_ENDPOINT=/api/v1/traces
+    volumes:
+      - ./services/frontend/src:/app/src
+      - ./services/frontend/public:/app/public
+    depends_on:
+      - api
+    networks:
+      - app-network
+      
+  db:
+    build:
+      context: ./services/db
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-securedbpassword}
+      - POSTGRES_DB=${DB_NAME:-app}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    build:
+      context: ./services/redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-secureredispassword}
+    volumes:
+      - redisdata:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  app-network:
+    name: microservices_app_network
+    driver: bridge
+  monitoring-network:
+    name: microservices_monitoring_network
+    driver: bridge
+  tracing-network:
+    name: microservices_tracing_network
+    driver: bridge
+
+
+volumes:
+  pgdata:
+  redisdata:
