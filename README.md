@@ -68,7 +68,7 @@ Services communicate over defined Docker networks with proper isolation between 
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/docker-microservices-project.git
+git clone https://github.com/ToluGIT/docker-ms-architecture.git
 cd docker-microservices-project
 ```
 
