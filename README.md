@@ -1,6 +1,6 @@
 # Nexa API - Microservices Architecture with Docker
 
-A comprehensive production-ready microservices architecture showcasing best practices for container-based applications, featuring complete monitoring, tracing, authentication, and high-quality DevOps tooling.
+A microservices architecture showcasing best practices for container-based applications, featuring monitoring, tracing, authentication.
 
 **[Read the detailed project walkthrough on Medium](https://medium.com/@tolubanji/from-zero-to-building-a-microservice-platform-a94e0a385c66)**
 
