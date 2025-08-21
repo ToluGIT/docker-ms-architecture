@@ -2,6 +2,8 @@
 
 A comprehensive production-ready microservices architecture showcasing best practices for container-based applications, featuring complete monitoring, tracing, authentication, and high-quality DevOps tooling.
 
+**[Read the detailed project walkthrough on Medium](https://medium.com/@tolubanji/from-zero-to-building-a-microservice-platform-a94e0a385c66)**
+
 ![Nexa API Architecture](https://github.com/user-attachments/assets/7e8e299e-6efe-46da-a6dd-36675b13dc66)
 
 ## Table of Contents
