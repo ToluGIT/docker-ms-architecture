@@ -1,143 +1,261 @@
-# Docker Microservices Project
+# Nexa API - Microservices Architecture with Docker
 
-A comprehensive example of a production-ready microservices architecture using Docker, featuring a full-stack application with monitoring, caching, authentication, and automated tooling.
+A comprehensive production-ready microservices architecture showcasing best practices for container-based applications, featuring complete monitoring, tracing, authentication, and high-quality DevOps tooling.
 
+![Nexa API Architecture](https://github.com/user-attachments/assets/7e8e299e-6efe-46da-a6dd-36675b13dc66)
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [System Architecture](#system-architecture)
 - [Key Features](#key-features)
-- [Prerequisites](#prerequisites)
+- [Technical Highlights](#technical-highlights)
 - [Getting Started](#getting-started)
-- [Development Environment](#development-environment)
-- [Production Environment](#production-environment)
-- [CLI Management Tool](#cli-management-tool)
+- [Development Workflow](#development-workflow)
 - [Monitoring & Observability](#monitoring--observability)
-- [Authentication](#authentication)
-- [Security Considerations](#security-considerations)
+- [Authentication & Security](#authentication--security)
 - [Project Structure](#project-structure)
+- [CLI Management Tool](#cli-management-tool)
 - [Troubleshooting](#troubleshooting)
-
 
 ## Overview
 
-This project demonstrates a modern approach to building, deploying, and managing microservices applications using Docker. It implements a functional system with:
+Nexa API demonstrates an approach to building resilient, observable, and secure microservices using Docker. It implements a functional system featuring:
 
-- **Backend API**: FastAPI-based RESTful service with PostgreSQL for persistence
-- **Frontend**: React application with responsive dashboard interface
-- **Caching**: Redis for performance optimization and session management
-- **Authentication**: JWT-based secure authentication
-- **Monitoring**: Prometheus, Grafana, and Jaeger for metrics, visualization, and tracing
-- **DevOps Tools**: CLI utility for managing the entire application lifecycle
+- **FastAPI Backend**: RESTful API with PostgreSQL persistence and Redis caching
+- **React Frontend**: Responsive dashboard with JWT authentication
+- **Monitoring**: Prometheus metrics, Grafana dashboards, and distributed tracing
+- **Advanced Observability**: OpenTelemetry integration with trace propagation across services
+- **Service Level Objectives**: Defined SLOs with monitoring and compliance tracking
+- **Production-Ready Security**: Authentication, rate limiting, and secure defaults
+- **DevOps Automation**: CLI utility for the application lifecycle
 
-This project serves as both a learning resource and a practical template for production-ready microservices deployments.
+This project serves as both a learning resource and a practical template for implementing microservices in environments.
 
 ## System Architecture
 
-The application follows a layered microservices architecture:
+The architecture follows a layered microservices design with proper separation of concerns:
 
-1. **Client Layer**: Browser-based access to the application
-2. **Services Layer**: Frontend (React+Nginx) and Backend (FastAPI) services
-3. **Data Layer**: PostgreSQL for persistent storage and Redis for caching
-4. **Monitoring Layer**: Prometheus, Grafana, and Jaeger for observability
-5. **Management Layer**: CLI tool for operations and maintenance
+### Service Layers
 
-Services communicate over defined Docker networks with proper isolation between components.
+1. **Frontend Layer**: React application with OpenTelemetry tracing, served via Nginx
+2. **API Layer**: FastAPI service with JWT auth, rate limiting, and distributed tracing
+3. **Data Layer**: 
+   - PostgreSQL for persistent storage
+   - Redis for caching and session management
+4. **Monitoring Layer**:
+   - Prometheus for metrics collection
+   - Grafana for visualization
+   - Jaeger for distributed tracing
 
-![Dockerimage01](https://github.com/user-attachments/assets/7e8e299e-6efe-46da-a6dd-36675b13dc66)
+### Network Architecture
+
+Services communicate over isolated Docker networks with proper segmentation:
+- `app-network`: Core application communication
+- `monitoring-network`: Metrics and monitoring tools
+- `tracing-network`: Distributed tracing data flow
 
 ## Key Features
 
-- **Separation of Concerns**: Each service has a specific responsibility and can be developed/scaled independently
-- **Environment-Specific Configurations**: Separate dev and prod configurations with appropriate optimizations
-- **Security**: Non-root users, network isolation, secrets management, and secure defaults
-- **Observability**: Comprehensive monitoring and logging for all services
-- **Scalability**: Services can be scaled independently based on demand
-- **Developer Experience**: Hot-reloading in development, easy-to-use CLI
+### Production-Ready Authentication
+- JWT token-based authentication with secure defaults
+- Configurable token expiration and refresh
+- Password hashing with bcrypt
+- Integration with Redis for distributed session storage
 
-## Prerequisites
+### Comprehensive Monitoring
+- Real-time metrics collection across all services
+- Custom dashboards for system performance
+- Container resource utilization tracking
+- Service Level Objectives (SLOs) with alerting
 
-- Docker (version 20.10 or later recommended)
+### Distributed Tracing
+- End-to-end request tracing across services
+- Performance bottleneck identification
+- Error correlation and root cause analysis
+- Custom trace attributes and span annotations
+
+### Caching Layer
+- Redis-backed caching for performance optimization
+- Instrumented cache operations for observability
+- Automatic cache invalidation strategies
+- Cache hit/miss metrics for optimization
+
+### Resilient Database Access
+- Repository pattern for data access abstraction
+- Connection pooling for performance optimization
+- Instrumented database operations
+- Automatic retry mechanisms for transient failures
+
+### DevOps Integration
+- Comprehensive CLI tooling
+- Network health checks
+- Security scanning
+- Environment-specific configurations
+
+## Technical Highlights
+
+### OpenTelemetry Integration
+- Context propagation across service boundaries
+- Custom trace attributes for business logic
+- Correlation IDs for request tracking
+- Integration with Jaeger for visualization
+
+
+### Security Features
+- Rate limiting to prevent abuse
+- Origin validation and CORS protection
+- Non-root container users
+- Network segmentation and isolation
+
+### Optimized Docker Configuration
+- Multi-stage builds for smaller images
+- Environment-specific optimizations
+- Health checks for automatic recovery
+- Resource limits to prevent resource exhaustion
+
+## Getting Started
+
+### Prerequisites
+
+- Docker (version 20.10 or later)
 - Docker Compose (version 2.x or later)
 - Python 3.8+ (for the CLI tool)
 - Git
 
-## Getting Started
-
-### Clone the Repository
+### Quick Start
 
 ```bash
-git clone https://github.com/yourusername/docker-microservices-project.git
-cd docker-microservices-project
-```
+# Clone the repository
+git clone <repository-url>
+cd docker-ms-architecture
 
-### Install CLI Dependencies
-
-```bash
+# Install CLI dependencies
 pip install rich requests
+
+# Start development environment
+./microservices --env dev start
+
+# Access the application
+# Frontend: http://localhost:3000
+# API: http://localhost:8000
+# API Docs: http://localhost:8000/api-docs
 ```
 
-### Generate Secrets for Development
+### Default Credentials
+
+- **API Admin**: Username `admin` / Password `admin123`
+
+## Development Workflow
+
+### Development Environment
 
 ```bash
-# Generate development secrets (or create .env.dev file manually)
-python generate_secrets.py --all > .env.dev
+# Build services for development
+./microservices --env dev build
+
+# Start services in development mode
+./microservices --env dev start
+
+# View service status
+./microservices --env dev status
+
+# View logs for specific service
+./microservices --env dev logs --service api
 ```
 
-### Start the Application (Development Mode)
+Development mode features:
+- Code hot-reloading
+- Volume mounting for live code changes
+- Enhanced logging and debugging
+- Default credentials and sample data
+
+### Testing
 
 ```bash
-./microservices  --env dev start
+# Run all tests
+./microservices --env dev test
+
+# Run specific test path
+./microservices --env dev test --test-path services/api/tests/test_api.py
 ```
 
-### Access the Application
-
-- Frontend: http://localhost:3000
-- API: http://localhost:8000
-
-## Development Environment
-
-The development environment is optimized for iteration and debugging:
-
-- **Volume Mounting**: Code changes are reflected without rebuilding containers
-- **Hot Reloading**: Frontend and API services automatically reload on code changes
-- **Debug Logs**: More verbose logging for troubleshooting
-- **Default Credentials**:
-  - Database: `postgres`/`securedbpassword`
-  - Redis: Password `secureredispassword`
-  - API Admin: Username `admin`/Password `admin123`
-
-### Start Development Environment
+### Production Environment
 
 ```bash
-./microservices  --env dev build
-./microservices  --env dev start
+# Build for production
+./microservices --env prod build
+
+# Start production environment
+./microservices --env prod start
 ```
 
-## Production Environment
+Production mode features:
+- Multi-stage Docker builds
+- Optimized container images
+- Resource limits and constraints
+- Enhanced security settings
 
-The production environment is optimized for security, performance, and reliability:
+## Monitoring & Observability
 
-- **Multi-Stage Builds**: Optimized Docker images with minimal dependencies
-- **Resource Limits**: CPU and memory constraints to prevent resource exhaustion
-- **Health Checks**: Automatic detection and recovery from failures
-- **Secure Configuration**: No default credentials, required environment variables
-
-### Prepare for Production
+### Starting Monitoring Stack
 
 ```bash
-# Generate secure secrets for production
-python generate_secrets.py --all > .env.prod
-
-# Edit .env.prod to customize settings if needed
+./microservices start-monitoring
 ```
 
-### Start Production Environment
+### Access Dashboards
+
+- **Grafana**: http://localhost:3001 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Jaeger Tracing**: http://localhost:16686
+
+### Available Metrics
+
+- API request counts and latencies
+- Container memory and CPU usage
+- Service Level Objective compliance
+- Cache hit/miss ratios
+- Database operation timing
+- Custom business metrics
+
+### Distributed Tracing
 
 ```bash
-./microservices  --env prod build
-./microservices  --env prod start
+# Start tracing system
+./microservices start-tracing
+
+# View trace summary
+./microservices trace-summary
+
+# Query specific traces
+./microservices query-traces --service api --limit 20
+```
+
+## Authentication & Security
+
+### Authentication Flow
+
+1. **Login**: POST to `/auth/token` with username/password
+2. **Token Usage**: Include JWT in Authorization header
+3. **Protected Resources**: Access API endpoints with valid token
+
+### Security Features
+
+- Rate limiting to prevent abuse
+- Input validation to prevent injection attacks
+- Non-root Docker container users
+- Network isolation between services
+- CORS protection with origin validation
+
+### Security Scanning
+
+```bash
+# Scan Docker images for vulnerabilities
+./microservices scan
+
+# Perform security checks
+./microservices security-check
 ```
 
 ## CLI Management Tool
@@ -148,90 +266,26 @@ The project includes a powerful CLI tool for managing the application:
 # Show status of all services
 ./microservices status
 
-# Start specific services
-./microservices start --services api frontend
-
 # View logs
 ./microservices logs --service api
 
 # Run security checks
 ./microservices security-check
 
-# Check network connectivity between services
+# Check network connectivity
 ./microservices network-check
 
 # Generate dependency graph
 ./microservices dependency-graph
 
-
 # Start monitoring stack
 ./microservices start-monitoring
-```
 
-## Monitoring & Observability
+# Trace analysis
+./microservices trace-summary --days 1
 
-### Start Monitoring Stack
-
-```bash
-./microservices start-monitoring
-```
-
-### Access Monitoring Dashboards
-
-- Grafana: http://localhost:3001 (admin/admin)
-- Prometheus: http://localhost:9090
-- Jaeger Tracing: http://localhost:16686
-
-### Available Metrics and Dashboards
-
-- API endpoints request counts
-- Container memory and CPU usage
-- Success rate
-
-## Authentication
-
-The application uses JWT (JSON Web Tokens) for authentication:
-
-1. **Login**: POST to `/auth/token` with username/password to receive a token
-2. **Authenticated Requests**: Include the token in the Authorization header
-3. **Token Expiration**: Tokens expire after 30 minutes by default
-
-Default user accounts (development only):
-- Admin: `admin`/`admin123`
-
-## Security Considerations
-
-- Database and Redis services are not exposed externally
-- Non-root users are used in Docker containers
-- Secrets are managed through environment variables
-- Proper network segmentation between services
-- Rate limiting to prevent abuse
-- Input validation to prevent injection attacks
-
-For production, ensure you:
-1. Change all default passwords
-2. Use proper secrets management
-3. Enable TLS/SSL for all public endpoints
-4. Regularly scan for vulnerabilities (`./microservices scan`)
-
-## Project Structure
-
-```
-docker-microservices-project/
-├── services/              # Application services
-│   ├── api/               # FastAPI backend
-│   ├── frontend/          # React frontend
-│   ├── db/                # PostgreSQL database
-│   └── redis/             # Redis cache
-├── monitoring/            # Monitoring configuration
-│   ├── prometheus/
-│   └── grafana/
-├── scripts/               # Management scripts
-│   └── cli.py             # CLI management tool
-├── docker-compose.yml     # Base Docker Compose config
-├── docker-compose.dev.yml # Development overrides
-├── docker-compose.prod.yml # Production overrides
-└── README.md
+# Performance benchmarks
+./microservices benchmark --endpoint /health --requests 100
 ```
 
 ## Troubleshooting
@@ -259,19 +313,6 @@ docker-microservices-project/
 # Check service health
 ./microservices status
 
-# Test Redis connectivity
-./check-redis.sh
-
-# Verify database
-./verify_db.sh
-
-# Troubleshoot metrics collection
-./troubleshoot-metrics.sh
-
 # Check network between services
 ./microservices network-check
 ```
-
----
-
-This project demonstrates Docker microservices best practices and provides a template for building real-world applications.
