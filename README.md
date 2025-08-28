@@ -1,4 +1,4 @@
-# Nexa API - Microservices Architecture with Docker
+I# Nexa API - Microservices Architecture with Docker
 
 A microservices architecture showcasing best practices for container-based applications, featuring monitoring, tracing, authentication.
 
@@ -262,7 +262,7 @@ Production mode features:
 
 ## CLI Management Tool
 
-The project includes a powerful CLI tool for managing the application:
+The project includes a CLI tool for managing the application:
 
 ```bash
 # Show status of all services
